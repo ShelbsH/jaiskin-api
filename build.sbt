@@ -1,7 +1,5 @@
 import Dependencies._
 
-ThisBuild / organization := "shurns"
-
 val core = (project in file("./api/core"))
   .settings(
     name := "api.jaiskin.com",
