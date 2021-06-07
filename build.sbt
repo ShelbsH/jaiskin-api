@@ -1,13 +1,12 @@
 import Dependencies._
 
-ThisBuild / organization := "shurns"
-
-val core = (project in file("./api/core"))
+val core = (project in file("api/core"))
   .settings(
-    name := "api.jaiskin.com",
+    name := "api-jaiskin",
     organization := "shurns.dev",
     version := "0.1",
     scalaVersion := "2.13.6",
+    scalacOptions += "-Ymacro-annotations",
     libraryDependencies ++= Seq(
       Libraries.Http4s,
       Libraries.Http4sBlazeClient,
@@ -19,6 +18,8 @@ val core = (project in file("./api/core"))
       Libraries.CatsEffect,
       Libraries.CatsRetry,
       Libraries.FS2,
+      Libraries.RefinedCore,
+      Libraries.RefinedCats,
       Libraries.Log4CatsCore,
       Libraries.Log4CatSslf4j,
       Libraries.NewType,
