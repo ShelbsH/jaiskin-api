@@ -1,6 +1,6 @@
 import Dependencies._
 
-val core = (project in file("./api/core"))
+val core = (project in file("api/core"))
   .settings(
     name := "api.jaiskin.com",
     organization := "shurns.dev",
