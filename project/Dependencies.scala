@@ -13,12 +13,14 @@ object Dependencies {
     val newType          = "0.4.4"
     val kindProjector    = "0.13.0"
     val betterMonadicFor = "0.3.1"
+    val refined          = "0.9.26"
   }
 
   private def http4s(artifact: String): ModuleID                = "org.http4s" %% s"http4s-$artifact" % Versions.http4s
   private def log4cats(artifact: String): ModuleID              = "org.typelevel" %% s"log4cats-$artifact" % Versions.log4Cats
   private def cats(artifact: String, version: String): ModuleID = "org.typelevel" %% s"cats-$artifact" % version
   private def circe(artifact: String): ModuleID                 = "io.circe" %% s"circe-$artifact" % Versions.circe
+  private def refined(artifact: String = ""): ModuleID          = "eu.timepit" %% s"refined$artifact" % Versions.refined
 
   object Libraries {
     //Http4s
@@ -37,12 +39,16 @@ object Dependencies {
     val CatsEffect = cats("effect", Versions.catsEffect)
     val CatsRetry = "com.github.cb372" %% "cats-retry" % Versions.catsRetry
 
-    //FS2
-    val FS2 = "co.fs2" %% "fs2-core" % Versions.fs2
+    //Refined
+    val RefinedCore = refined()
+    val RefinedCats = refined("-cats")
 
     //Logger
     val Log4CatsCore = log4cats("core")
     val Log4CatSslf4j = log4cats("slf4j")
+
+    //FS2
+    val FS2 = "co.fs2" %% "fs2-core" % Versions.fs2
     
     //NewType
     val NewType = "io.estatico" %% "newtype" % Versions.newType
@@ -58,6 +64,10 @@ object Dependencies {
 
     val betterMonadicFor = compilerPlugin(
       "com.olegpy" %% "better-monadic-for" % Versions.betterMonadicFor
+    )
+
+    val macros = addCompilerPlugin(
+      "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
     )
   }
 }
