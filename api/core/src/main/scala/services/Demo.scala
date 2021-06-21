@@ -1,8 +1,9 @@
 package services
 
-import cats.ApplicativeThrow
 import cats.syntax.either._
+import cats.ApplicativeThrow
 import eu.timepit.refined.types.string.NonEmptyString
+
 import domains.demo.ParamIsEmpty
 
 trait Demo[F[_]] {

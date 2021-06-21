@@ -1,8 +1,8 @@
 package routes
 
+import cats.{ MonadThrow }
 import cats.syntax.flatMap._
 import cats.syntax.applicativeError._
-import cats.MonadThrow
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 
@@ -16,8 +16,8 @@ final case class DemoRoute[F[_]: MonadThrow](demo: Demo[F]) extends Http4sDsl[F]
         demo
           .message(greet)
           .flatMap(Ok(_))
-          .recoverWith {
-            case ParamIsEmpty(msg) => BadRequest(msg)
+          .recoverWith { case ParamIsEmpty(msg) =>
+            BadRequest(msg)
           }
     }
 }
