@@ -1,7 +1,7 @@
 package http
 
 import cats.implicits._
-import cats.effect.{Async, Resource}
+import cats.effect.{ Async, Resource }
 import org.http4s.HttpApp
 import org.http4s.server.Server
 import org.http4s.blaze.server.BlazeServerBuilder
