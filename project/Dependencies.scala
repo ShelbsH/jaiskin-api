@@ -17,9 +17,10 @@ object Dependencies {
     val betterMonadicFor = "0.3.1"
     val refined          = "0.9.26"
     val skunk            = "0.2.0"
+    val ciris            = "2.0.1"
+    val monocle          = "3.0.0"
+    val tsec             = "0.4.0"
   }
-
-  //"tf.tofu" %% "derevo-cats" % "latest version in badge"
 
   private def http4s(artifact: String): ModuleID                = "org.http4s" %% s"http4s-$artifact" % Versions.http4s
   private def log4cats(artifact: String): ModuleID              = "org.typelevel" %% s"log4cats-$artifact" % Versions.log4Cats
@@ -27,6 +28,9 @@ object Dependencies {
   private def circe(artifact: String): ModuleID                 = "io.circe" %% s"circe-$artifact" % Versions.circe
   private def refined(artifact: String = ""): ModuleID          = "eu.timepit" %% s"refined$artifact" % Versions.refined
   private def derevo(artifact: String): ModuleID                = "tf.tofu" %% s"derevo-$artifact" % Versions.derevo
+  private def ciris(artifact: String): ModuleID                 = "is.cir" %% artifact % Versions.ciris
+  private def monocle(artifact: String): ModuleID               = "dev.optics" %% s"monocle-$artifact" % Versions.monocle
+  private def tsec(artifact: String): ModuleID                  = "io.github.jmcardon" %% s"tsec-$artifact" % Versions.tsec
 
   object Libraries {
     //Http4s
@@ -74,6 +78,18 @@ object Dependencies {
 
     //Skunk
     val Skunk = "org.tpolecat" %% "skunk-core" % Versions.skunk
+
+    //Ciris
+    val Ciris           = ciris("ciris")
+    val CirisRefined    = ciris("ciris-refined")
+    val CirisEnumeratum = ciris("ciris-enumeratum")
+
+    //Monocle
+    val Monocle      = monocle("core")
+    val MonocleMacro = monocle("macro")
+
+    //Tsec
+    val TsecPassword = tsec("password")
   }
 
   object CompilerPlugin {

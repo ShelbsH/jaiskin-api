@@ -16,8 +16,8 @@ final case class DemoRoute[F[_]: MonadThrow](demo: Demo[F]) extends Http4sDsl[F]
         demo
           .message(greet)
           .flatMap(Ok(_))
-          .recoverWith { case ParamIsEmpty(msg) =>
-            BadRequest(msg)
+          .recoverWith {
+            case ParamIsEmpty(msg) => BadRequest(msg)
           }
     }
 }
