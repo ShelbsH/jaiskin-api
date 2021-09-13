@@ -1,26 +1,28 @@
 package domains
 
 import java.util.UUID
+import cats.data.NonEmptyList
 import scala.util.control.NoStackTrace
 import derevo.derive
-import derevo.circe.magnolia.{ encoder, decoder }
 import derevo.cats.{ eqv, show }
+import derevo.circe.magnolia.{ decoder, encoder }
 import eu.timepit.refined.auto._
-import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.{ Refined, RefinedTypeOps }
 import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.refined._
 import io.estatico.newtype.macros.newtype
 
-object user {
+import optics.uuid
 
-  @derive(encoder, decoder, eqv, show)
+object user {
+  @derive(encoder, decoder, eqv, show, uuid)
   @newtype
   case class UserId(value: UUID)
 
   @derive(encoder, decoder, eqv, show)
   @newtype
-  case class UserName(value: String)
+  case class Username(value: String)
 
   @derive(encoder, decoder, eqv, show)
   @newtype
@@ -32,44 +34,65 @@ object user {
 
   @derive(encoder, decoder, eqv, show)
   @newtype
+  case class EncryptedPassword(value: String)
+
+  @derive(encoder, decoder, eqv, show)
+  @newtype
   case class Name(value: String)
 
   @derive(encoder, decoder, eqv, show)
-  case class User(id: UserId, firstName: Name, lastName: Name, username: UserName, email: Email)
+  case class User(id: UserId, firstName: Name, lastName: Name, username: Username, email: Email)
 
   /*
    * -------------------------------------
    * Register
    * -------------------------------------
    */
+  type InputR = NonEmptyString
+  object InputR extends RefinedTypeOps[InputR, String]
+
+  type NameR = String Refined MatchesRegex["""^[^\d\W]+$"""]
+  object NameR extends RefinedTypeOps[NameR, String]
+
+  type UsernameR = NonEmptyString
+  object UsernameR extends RefinedTypeOps[NameR, String]
+
+  type EmailR = String Refined MatchesRegex["""^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"""]
+  object EmailR extends RefinedTypeOps[EmailR, String]
+
+  type PasswordR = NonEmptyString
+  object PasswordR extends RefinedTypeOps[PasswordR, String]
+
   @derive(encoder, decoder)
   @newtype case class NameParam(value: NonEmptyString) {
     def toValue: Name = Name(value.toLowerCase)
   }
 
-  type EmailRegex = String Refined MatchesRegex["""@\"^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$\"""]
-
   @derive(encoder, decoder)
-  @newtype case class EmailParam(value: EmailRegex) {
-    def toValue: Email = Email(value.toLowerCase)
-  }
+  case class Register(
+      firstName: Name,
+      lastName: Name,
+      username: Username,
+      email: Email,
+      password: Password
+  )
 
-  @derive(encoder, decoder)
-  @newtype case class PasswordParam(value: NonEmptyString) {
-    def toValue: Password = Password(value.toLowerCase)
-  }
-
-  @derive(encoder, decoder)
-  case class Register(firstName: NameParam, lastName: NameParam, email: EmailParam, password: PasswordParam)
+  case class RegisterCredentials(
+      firstName: Name,
+      lastName: Name,
+      username: Username,
+      email: Email,
+      password: Password
+  )
 
   /*
    * -------------------------------------
    * Register Domain Errors
    * -------------------------------------
    */
+  case class ValidationError(message: String, errors: NonEmptyList[String]) extends NoStackTrace
   case class EmailInUse(email: Email) extends NoStackTrace
-  case class UserNameInUse(username: UserName) extends NoStackTrace
-  case class InvalidEmail(msg: String) extends NoStackTrace //This will be moved into a file
+  case class UsernameInUse(username: Username) extends NoStackTrace
 
   /*
    * -------------------------------------
@@ -77,12 +100,12 @@ object user {
    * -------------------------------------
    */
   @derive(encoder, decoder)
-  case class Login(email: EmailParam, password: PasswordParam)
+  case class Login(email: Email, password: Password)
 
   /*
    * -------------------------------------
    * Login Domain Errors
    * -------------------------------------
    */
-  case class EmailOrPasswordInvalid(msg: String) extends NoStackTrace
+  case class EmailOrPasswordInvalid(message: String) extends NoStackTrace
 }

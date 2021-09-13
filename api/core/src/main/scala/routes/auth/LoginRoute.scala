@@ -12,20 +12,21 @@ import org.http4s.circe.CirceEntityCodec._
 import io.circe.generic.auto._
 
 import services.Auth
-import domains.user.{ EmailOrPasswordInvalid, Login }
+import domains.user.{ ValidationError, EmailOrPasswordInvalid, Login }
 
 final case class LoginRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extends Http4sDsl[F] {
   private[routes] val pathPrefix = "/auth"
 
   private val httpRoutes: HttpRoutes[F] =
-    HttpRoutes.of[F] {
+    HttpRoutes.of[F] { 
       case req @ POST -> Root / "login" =>
         req.asJsonDecode[Login].flatMap { user =>
           auth
-            .login(user.email.toValue, user.password.toValue)
+            .login(user.email, user.password)
             .flatMap(Ok(_))
             .recoverWith {
-              case EmailOrPasswordInvalid(msg) =>  Forbidden(msg)
+              case validationError: ValidationError => BadRequest(validationError)
+              case EmailOrPasswordInvalid(message)  => Forbidden(message)
             }
         }
     }

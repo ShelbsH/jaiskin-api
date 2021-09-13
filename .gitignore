@@ -4,6 +4,7 @@
 .bsp
 .vscode
 .idea
+.env
 project/.bloop/
 project/project
 project/target

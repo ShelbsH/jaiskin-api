@@ -12,28 +12,24 @@ import org.http4s.circe.JsonDecoder
 import org.http4s.circe.CirceEntityCodec._
 
 import services.Auth
-import domains.user.{ EmailInUse, Register, UserNameInUse }
+import domains.user.{ RegisterCredentials, EmailInUse, UsernameInUse, ValidationError }
 
 case class RegisterRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extends Http4sDsl[F] {
   private[routes] val pathPrefix = "/auth"
 
   private val httpRoutes: HttpRoutes[F] =
-    HttpRoutes.of[F] {
+    HttpRoutes.of[F] { 
       case req @ POST -> Root / "register" =>
         req
-          .asJsonDecode[Register]
-          .flatMap { r =>
+          .asJsonDecode[RegisterCredentials]
+          .flatMap { credentials =>
             auth
-              .register(
-                r.firstName.toValue,
-                r.lastName.toValue,
-                r.email.toValue,
-                r.password.toValue
-              )
+              .register(credentials)
               .flatMap(Created(_))
               .recoverWith {
-                case EmailInUse(msg)    => Conflict(msg)
-                case UserNameInUse(msg) => Conflict(msg)
+                case validationError: ValidationError => BadRequest(validationError)
+                case EmailInUse(email)                => Conflict(email)
+                case UsernameInUse(username)          => Conflict(username)
               }
           }
     }

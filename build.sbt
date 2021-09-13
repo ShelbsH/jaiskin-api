@@ -6,7 +6,14 @@ val core = (project in file("api/core"))
     organization := "shurns.dev",
     version := "0.1",
     scalaVersion := "2.13.6",
-    scalacOptions += "-Ymacro-annotations",
+    scalacOptions ++= Seq(
+      "-Ymacro-annotations",
+      "-Ywarn-unused", //Temporary,
+      "-Wconf:cat=unused:info",
+      "-Ywarn-dead-code",
+      "Ywarn-inaccessible",
+      "-Ywarn-value-discard"
+    ),
     libraryDependencies ++= Seq(
       Libraries.Http4s,
       Libraries.Http4sBlazeClient,
@@ -32,6 +39,12 @@ val core = (project in file("api/core"))
       Libraries.NewType,
       Libraries.Squants,
       Libraries.Skunk,
+      Libraries.Ciris,
+      Libraries.CirisRefined,
+      Libraries.CirisEnumeratum,
+      Libraries.Monocle,
+      Libraries.MonocleMacro,
+      Libraries.TsecPassword,
       CompilerPlugin.betterMonadicFor,
       CompilerPlugin.kindProjector
     )
