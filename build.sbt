@@ -45,6 +45,7 @@ val core = (project in file("api/core"))
       Libraries.Monocle,
       Libraries.MonocleMacro,
       Libraries.TsecPassword,
+      Libraries.logback % Runtime,
       CompilerPlugin.betterMonadicFor,
       CompilerPlugin.kindProjector
     )
