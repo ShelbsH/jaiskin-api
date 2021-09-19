@@ -1,14 +1,14 @@
 package sql
 
+import skunk._
+import skunk.implicits._
+import skunk.codec.text._
+import natchez.Trace
+import fs2.io.net.Network
 import cats.implicits._
 import cats.effect.std.Console
 import cats.effect.Resource
 import cats.effect.kernel.{ Concurrent }
-import natchez.Trace
-import skunk._
-import skunk.codec.text._
-import skunk.implicits._
-import fs2.io.net.Network
 import org.typelevel.log4cats.Logger
 
 import configuration.types.PostgresConfig

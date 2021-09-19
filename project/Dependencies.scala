@@ -20,6 +20,7 @@ object Dependencies {
     val ciris            = "2.0.1"
     val monocle          = "3.0.0"
     val tsec             = "0.4.0"
+    val logback          = "1.2.6"
   }
 
   private def http4s(artifact: String): ModuleID                = "org.http4s" %% s"http4s-$artifact" % Versions.http4s
@@ -90,6 +91,8 @@ object Dependencies {
 
     //Tsec
     val TsecPassword = tsec("password")
+
+    val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
   }
 
   object CompilerPlugin {

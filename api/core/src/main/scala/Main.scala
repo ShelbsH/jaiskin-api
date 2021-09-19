@@ -1,5 +1,4 @@
 import cats.effect._
-import org.http4s.implicits._
 import natchez.Trace.Implicits.noop
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -13,15 +12,16 @@ object Main extends IOApp.Simple {
 
   override def run: IO[Unit] =
     Config.load[IO].flatMap { cfg =>
-      PostgreSQL
-        .make[IO](cfg.psqlConfig)
-        .use { res =>
-          val services = Services.make[IO](res.postgresSql)
-          val httpApi = HttpAPI.create[IO](services).routes
+      logger.info("App configuration has been loaded") *>
+        PostgreSQL
+          .make[IO](cfg.psqlConfig)
+          .use { res =>
+            val services = Services.make[IO](res.postgresSql)
+            val httpApi = HttpAPI.create[IO](services).routes
 
-          HttpServer[IO]
-            .addBlazeServer(httpApi.orNotFound, 8000)
-            .flatMap(_.use(_ => IO.never))
-        }
+            HttpServer[IO]
+              .addBlazeServer(httpApi, 8000)
+              .flatMap(_.use(_ => IO.never))
+          }
     }
 }
