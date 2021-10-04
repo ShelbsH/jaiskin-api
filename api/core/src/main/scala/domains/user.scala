@@ -42,6 +42,9 @@ object user {
 
   @derive(encoder, decoder, eqv, show)
   case class User(id: UserId, firstName: Name, lastName: Name, username: Username, email: Email)
+  
+  @derive(encoder, decoder, eqv, show)
+  case class UserWithPassword(user: User, encryptedPassword: EncryptedPassword)
 
   /*
    * -------------------------------------
@@ -108,4 +111,12 @@ object user {
    * -------------------------------------
    */
   case class EmailOrPasswordInvalid(message: String) extends NoStackTrace
+  val invalidEmailOrPassword = EmailOrPasswordInvalid("Email or Password is Incorrect")
+
+  /*
+   * -------------------------------------
+   * Message Domain Error
+   * -------------------------------------
+   */
+  case class ErrorMessage(message: String) extends NoStackTrace
 }

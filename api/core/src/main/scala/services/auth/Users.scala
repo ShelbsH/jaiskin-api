@@ -5,7 +5,6 @@ import skunk.implicits._
 import cats.implicits._
 import cats.effect.Resource
 import cats.effect.kernel.MonadCancelThrow
-import dev.profunktor.auth.jwt.JwtToken
 
 import domains.ID
 import sql.codecs._
@@ -14,8 +13,7 @@ import effects.GenerateUUID
 
 trait Users[F[_]] {
   def createUser(reg: Register, password: EncryptedPassword): F[User]
-  def getUserByEmail(email: Email): F[Option[User]]
-  def getUserByToken(token: JwtToken): F[Option[User]]
+  def getUserByEmail(email: Email): F[Option[UserWithPassword]]
   def getUserByUsername(username: Username): F[Option[User]]
 }
 
@@ -35,14 +33,16 @@ object Users {
             }
         }
 
-      def getUserByEmail(email: Email): F[Option[User]] =
+      def getUserByEmail(email: Email): F[Option[UserWithPassword]] =
         psql
           .flatMap(_.prepare(selectUserByEmail))
           .use { q =>
             q.option(email)
+              .map {
+                case Some(u ~ p) => UserWithPassword(u, p).some
+                case None        => none[UserWithPassword]
+              }
           }
-
-      def getUserByToken(token: JwtToken): F[Option[User]] = ???
 
       def getUserByUsername(username: Username): F[Option[User]] =
         psql
@@ -54,17 +54,20 @@ object Users {
 }
 
 private object AuthSQL {
-  val encode: Encoder[User ~ EncryptedPassword] =
+  val codec: Codec[User ~ EncryptedPassword] =
     (userId ~ name ~ name ~ username ~ email ~ encryptedPassword)
-      .contramap {
-        case u ~ p =>
+      .imap {
+        case (id ~ f ~ l ~ u ~ e ~ p) => 
+          User(id, f, l, u, e) ~ EncryptedPassword(p.value)
+      } {
+        case u ~ p => 
           u.id ~ u.firstName ~ u.lastName ~ u.username ~ u.email ~ p
       }
 
   val insertUser: Command[User ~ EncryptedPassword] =
     sql"""
          INSERT INTO users
-         VALUES ($encode)
+         VALUES ($codec)
        """.command
 
   val selectUserByUsername: Query[Username, User] =
@@ -76,12 +79,11 @@ private object AuthSQL {
       .query(userId ~ name ~ name ~ username ~ email)
       .gmap[User]
 
-  val selectUserByEmail: Query[Email, User] =
+  val selectUserByEmail: Query[Email, User ~ EncryptedPassword] =
     sql"""
-         SELECT uuid, first_name, last_name, username, email
-         FROM users
+         SELECT * FROM users
          WHERE email = $email
        """
-      .query(userId ~ name ~ name ~ username ~ email)
-      .gmap[User]
+      .query(codec)
+      .gmap[User ~ EncryptedPassword]
 }

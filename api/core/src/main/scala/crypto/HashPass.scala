@@ -9,6 +9,7 @@ import domains.user.{ Password, EncryptedPassword }
 
 trait HashPass[F[_]] {
   def encrypt(password: Password): F[EncryptedPassword]
+  def compare(password: Password, encryptedPassword: EncryptedPassword): F[Boolean]
 }
 
 object HashPass {
@@ -18,5 +19,11 @@ object HashPass {
         SCrypt
           .hashpw[F](password.value.toCharArray)
           .map(h => EncryptedPassword(h.mkString))
+
+      def compare(password: Password, encryptedPassword: EncryptedPassword): F[Boolean] =
+        SCrypt.checkpwBool(
+          password.value.toCharArray,
+          PasswordHash(encryptedPassword.value)
+        )
     }
 }

@@ -16,7 +16,7 @@ object Main extends IOApp.Simple {
         PostgreSQL
           .make[IO](cfg.psqlConfig)
           .use { res =>
-            val services = Services.make[IO](res.postgresSql)
+            val services = Services.make[IO](res.postgresSql, cfg)
             val httpApi = HttpAPI.create[IO](services).routes
 
             HttpServer[IO]

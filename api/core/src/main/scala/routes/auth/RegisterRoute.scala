@@ -12,7 +12,7 @@ import org.http4s.circe.JsonDecoder
 import org.http4s.circe.CirceEntityCodec._
 
 import services.Auth
-import domains.user.{ RegisterCredentials, EmailInUse, UsernameInUse, ValidationError }
+import domains.user._
 
 case class RegisterRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extends Http4sDsl[F] {
   private[routes] val pathPrefix = "/auth"
@@ -27,9 +27,9 @@ case class RegisterRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extends H
               .register(credentials)
               .flatMap(Created(_))
               .recoverWith {
-                case validationError: ValidationError => BadRequest(validationError)
-                case EmailInUse(email)                => Conflict(email)
-                case UsernameInUse(username)          => Conflict(username)
+                case validationError: ValidationError => UnprocessableEntity(validationError)
+                case EmailInUse(email)                => Conflict(ErrorMessage(s"Email, $email already exists on this account"))
+                case UsernameInUse(username)          => Conflict(ErrorMessage(s"Username, $username already exists on this account"))
               }
           }
     }
