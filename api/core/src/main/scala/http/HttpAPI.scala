@@ -13,6 +13,7 @@ import routes.version
 import services.Services
 import routes.DemoRoute
 import routes.auth.RegisterRoute
+import routes.auth.LoginRoute
 
 object HttpAPI {
   def create[F[_]: Async](services: Services[F]): HttpAPI[F] =
@@ -20,9 +21,10 @@ object HttpAPI {
 }
 
 sealed abstract class HttpAPI[F[_]: Async] private (val services: Services[F]) {
-  private val demoRoute: HttpRoutes[F] = DemoRoute[F](services.demo).route
+  private val demoRoute: HttpRoutes[F]     = DemoRoute[F](services.demo).route
   private val registerRoute: HttpRoutes[F] = RegisterRoute[F](services.auth).route
-  private val composeRoutes: HttpRoutes[F] = demoRoute <+> registerRoute
+  private val loginRoute: HttpRoutes[F]    = LoginRoute[F](services.auth).route
+  private val composeRoutes: HttpRoutes[F] = demoRoute <+> registerRoute <+> loginRoute
 
   private val middleware: HttpRoutes[F] => HttpRoutes[F] =
     http => CORS(http)

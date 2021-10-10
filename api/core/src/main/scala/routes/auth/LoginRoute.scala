@@ -12,7 +12,7 @@ import org.http4s.circe.CirceEntityCodec._
 import io.circe.generic.auto._
 
 import services.Auth
-import domains.user.{ ValidationError, EmailOrPasswordInvalid, Login }
+import domains.user._
 
 final case class LoginRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extends Http4sDsl[F] {
   private[routes] val pathPrefix = "/auth"
@@ -25,8 +25,8 @@ final case class LoginRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extend
             .login(user.email, user.password)
             .flatMap(Ok(_))
             .recoverWith {
-              case validationError: ValidationError => BadRequest(validationError)
-              case EmailOrPasswordInvalid(message)  => Forbidden(message)
+              case validationError: ValidationError => UnprocessableEntity(validationError)
+              case EmailOrPasswordInvalid(message)  => Forbidden(ErrorMessage(message))
             }
         }
     }

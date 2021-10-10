@@ -5,7 +5,7 @@ object Dependencies {
     val http4s           = "1.0.0-M22"
     val http4sJwtAuth    = "1.0.0-RC3"
     val circe            = "0.14.1"
-    val catsCore         = "2.3.0"
+    val catsCore         = "2.6.1"
     val catsEffect       = "3.1.1"
     val catsRetry        = "3.0.0"
     val fs2              = "3.0.4"
