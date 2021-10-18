@@ -26,7 +26,7 @@ final case class LoginRoute[F[_]: MonadThrow: JsonDecoder](auth: Auth[F]) extend
             .flatMap(Ok(_))
             .recoverWith {
               case validationError: ValidationError => UnprocessableEntity(validationError)
-              case EmailOrPasswordInvalid(message)  => Forbidden(ErrorMessage(message))
+              case EmailOrPasswordInvalid           => Forbidden(ErrorMessage("Email or Password is Incorrect"))
             }
         }
     }
