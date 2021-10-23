@@ -32,9 +32,9 @@ object Auth {
               case Some(user) =>
                 hashPass
                   .compare(password, user.encryptedPassword)
-                  .ensure(invalidEmailOrPassword)(_ === true)
+                  .ensure(EmailOrPasswordInvalid)(_ === true)
                   .flatMap(_ => tokens.make(user.user.id))
-              case None => invalidEmailOrPassword.raiseError[F, JwtToken]
+              case None => EmailOrPasswordInvalid.raiseError[F, JwtToken]
             }
         }
 

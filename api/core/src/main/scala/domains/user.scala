@@ -110,8 +110,7 @@ object user {
    * Login Domain Errors
    * -------------------------------------
    */
-  case class EmailOrPasswordInvalid(message: String) extends NoStackTrace
-  val invalidEmailOrPassword = EmailOrPasswordInvalid("Email or Password is Incorrect")
+  case object EmailOrPasswordInvalid extends NoStackTrace
 
   /*
    * -------------------------------------
