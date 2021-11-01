@@ -12,6 +12,7 @@ import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.refined._
 import io.estatico.newtype.macros.newtype
+import dev.profunktor.auth.jwt.JwtSymmetricAuth
 
 import optics.uuid
 
@@ -46,6 +47,8 @@ object user {
   @derive(encoder, decoder, eqv, show)
   case class UserWithPassword(user: User, encryptedPassword: EncryptedPassword)
 
+  @newtype case class JwtUserAuth(value: JwtSymmetricAuth)
+  
   /*
    * -------------------------------------
    * Register

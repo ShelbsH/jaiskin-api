@@ -14,7 +14,6 @@ import configuration.types._
 
 trait Tokens[F[_]] {
   def make(id: UserId): F[JwtToken]
-  def read(token: JwtToken): F[JwtUserClaim]
 }
 
 object Tokens {
@@ -39,8 +38,6 @@ object Tokens {
           .flatMap { claim =>
             jwtEncode[F](claim, JwtSecretKey(jwtSecret.secret.value), JwtAlgorithm.HS256)
           }
-
-      def read(token: JwtToken): F[JwtUserClaim] = ???
     }
   }
 }
