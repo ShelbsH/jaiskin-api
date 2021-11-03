@@ -2,9 +2,13 @@ package services.auth
 
 import skunk._
 import skunk.implicits._
+import io.circe.Decoder
+import io.circe.parser.{ decode => jsonDecode }
 import cats.implicits._
 import cats.effect.Resource
 import cats.effect.kernel.MonadCancelThrow
+import pdi.jwt.JwtClaim
+import dev.profunktor.auth.jwt._
 
 import domains.ID
 import sql.codecs._
@@ -15,6 +19,45 @@ trait Users[F[_]] {
   def createUser(reg: Register, password: EncryptedPassword): F[User]
   def getUserByEmail(email: Email): F[Option[UserWithPassword]]
   def getUserByUsername(username: Username): F[Option[User]]
+}
+
+trait UserAuth[F[_], A] {
+  def findUser(token: JwtToken)(claim: JwtClaim): F[Option[A]]
+}
+
+object UserAuth {
+  import AuthSQL._
+  
+  /**
+    * Note: The subject's field value from JwtClaim isn't present 
+    * after decoding the token with jwtDecode from http4s-jwt-auth 
+    * (only works in v1.0.0). Until it's resolved, use json decode 
+    * from circe parser for now.
+    */
+
+  case class JwtSubject(sub: String)
+
+  implicit val jwtSubjectDecode: Decoder[JwtSubject] =
+    Decoder.forProduct1("sub")(JwtSubject.apply)
+
+  def common[F[_]: MonadCancelThrow: GenerateUUID](
+      psql: Resource[F, Session[F]],
+      jwtUserAuth: JwtUserAuth
+  ): UserAuth[F, User] =
+    new UserAuth[F, User] {
+      def findUser(token: JwtToken)(claim: JwtClaim): F[Option[User]] =
+        jwtDecode[F](token, jwtUserAuth.value).flatMap { claim =>
+          jsonDecode(claim.content).toOption.traverse { subject =>
+            ID.read[F, UserId](subject.sub).flatMap { id =>
+              psql
+                .flatMap(_.prepare(selectUserById))
+                .use { q =>
+                  q.unique(id)
+                }
+            }
+          }
+        }
+    }
 }
 
 object Users {
@@ -86,4 +129,13 @@ private object AuthSQL {
        """
       .query(codec)
       .gmap[User ~ EncryptedPassword]
+
+  val selectUserById: Query[UserId, User] =
+    sql"""
+         SELECT uuid, first_name, last_name, username, email 
+         FROM users
+         WHERE uuid = $userId
+      """
+      .query(userId ~ name ~ name ~ username ~ email)
+      .gmap[User]
 }
