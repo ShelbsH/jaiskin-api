@@ -12,7 +12,6 @@ import extension.ValidationFields._
 
 trait Auth[F[_]] {
   def login(email: Email, password: Password): F[JwtToken]
-  def logout(token: JwtToken, userId: UserId): F[Unit]
   def register(reg: RegisterCredentials): F[JwtToken]
 }
 
@@ -36,8 +35,6 @@ object Auth {
               case None => EmailOrPasswordInvalid.raiseError[F, JwtToken]
             }
         }
-
-      def logout(token: JwtToken, userId: UserId): F[Unit] = ???
 
       def register(reg: RegisterCredentials): F[JwtToken] =
         (
