@@ -34,7 +34,7 @@ object Config {
           ),
           jwtSecret,
           JwtIssuer("jaiskin"),
-          JwtExpiration(30.minute)
+          JwtExpiration(15.minutes)
         )
       }
       .load[F]
