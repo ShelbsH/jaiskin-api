@@ -16,12 +16,13 @@ object Main extends IOApp.Simple {
         PostgreSQL
           .make[IO](cfg.psqlConfig)
           .use { res =>
-            val services = Services.make[IO](res.postgresSql, cfg)
-            val httpApi = HttpAPI.create[IO](services).routes
+            Services.make[IO](res.postgresSql, cfg).flatMap { services =>
+              val httpApi = HttpAPI.create[IO](services).routes
 
-            HttpServer[IO]
-              .addBlazeServer(httpApi, 8000)
-              .flatMap(_.use(_ => IO.never))
+              HttpServer[IO]
+                .addBlazeServer(httpApi, 8000)
+                .flatMap(_.use(_ => IO.never))
+            }
           }
     }
 }

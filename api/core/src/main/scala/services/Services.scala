@@ -1,15 +1,16 @@
 package services
 
 import skunk.Session
+import cats.implicits._
 import pdi.jwt.JwtAlgorithm
+import cats.effect.Resource
+import cats.effect.kernel.Sync
 import tsec.passwordhashers._
 import tsec.passwordhashers.jca._
 import dev.profunktor.auth.jwt.JwtAuth
-import cats.effect.{ MonadCancelThrow, Resource }
 
 import tokens.Tokens
 import crypto.HashPass
-import effects.JwtClock
 import services.auth.Users
 import effects.TokenExpire
 import effects.GenerateUUID
@@ -18,17 +19,10 @@ import configuration.types.AppConfig
 import services.auth.UserAuth
 
 object Services {
-  def make[F[_]: MonadCancelThrow: JwtClock: PasswordHasher[*[_], SCrypt]: GenerateUUID](
+  def make[F[_]: Sync: PasswordHasher[*[_], SCrypt]: GenerateUUID](
       psql: Resource[F, Session[F]],
       appConfig: AppConfig
-  ): Services[F] = {
-    val tokens = Tokens.create[F](
-      TokenExpire.create[F],
-      appConfig.jwtIssuer,
-      appConfig.jwtExpiration,
-      appConfig.jwtKeyConfig.value
-    )
-
+  ): F[Services[F]] = {
     val jwtUserAuth: JwtUserAuth = JwtUserAuth(
       JwtAuth.hmac(
         appConfig.jwtKeyConfig.value.secret.value,
@@ -36,12 +30,21 @@ object Services {
       )
     )
 
-    new Services[F](
-      auth = Auth.create[F](HashPass.create[F], Users.create[F](psql), tokens),
-      jwtUserAuth = jwtUserAuth,
-      userAuth = UserAuth.common[F](psql, jwtUserAuth),
-      demo = Demo.create[F]
-    ) {}
+    TokenExpire.create[F].map { tokenExp =>
+      val tokens = Tokens.create[F](
+        tokenExp,
+        appConfig.jwtIssuer,
+        appConfig.jwtExpiration,
+        appConfig.jwtKeyConfig.value
+      )
+
+      new Services[F](
+        auth = Auth.create[F](HashPass.create[F], Users.create[F](psql), tokens),
+        jwtUserAuth = jwtUserAuth,
+        userAuth = UserAuth.common[F](psql, jwtUserAuth),
+        demo = Demo.create[F]
+      ) {}
+    }
   }
 }
 
