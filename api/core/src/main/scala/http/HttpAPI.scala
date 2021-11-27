@@ -11,27 +11,28 @@ import org.http4s.server.middleware.{ RequestLogger, ResponseLogger }
 
 import routes.version
 import routes.DemoRoute
+import routes.auth.GetUserRoute
 import routes.auth.{ RegisterRoute, LoginRoute }
 import services.Services
-import dev.profunktor.auth.JwtAuthMiddleware
-import routes.auth.GetUserRoute
 import domains.user.User
+import security.Security
+import dev.profunktor.auth.JwtAuthMiddleware
 
 object HttpAPI {
-  def create[F[_]: Async](services: Services[F]): HttpAPI[F] =
-    new HttpAPI[F](services) {}
+  def create[F[_]: Async](services: Services[F], security: Security[F]): HttpAPI[F] =
+    new HttpAPI[F](services, security) {}
 }
 
-sealed abstract class HttpAPI[F[_]: Async] private (val services: Services[F]) {
-  private val userMiddleware = JwtAuthMiddleware[F, User](services.jwtUserAuth.value, services.userAuth.findUser)
+sealed abstract class HttpAPI[F[_]: Async] private (val services: Services[F], security: Security[F]) {
+  private val userMiddleware = JwtAuthMiddleware[F, User](security.jwtUserAuth.value, security.userAuth.findUser)
 
   //Public Routes
   private val demoRoute: HttpRoutes[F]     = DemoRoute[F](services.demo).route
-  private val registerRoute: HttpRoutes[F] = RegisterRoute[F](services.auth).route
-  private val loginRoute: HttpRoutes[F]    = LoginRoute[F](services.auth).route
+  private val registerRoute: HttpRoutes[F] = RegisterRoute[F](security.auth).route
+  private val loginRoute: HttpRoutes[F]    = LoginRoute[F](security.auth).route
 
   //AuthRoutes
-  private val getUserRoute: HttpRoutes[F]  = GetUserRoute[F]().routes(userMiddleware)
+  private val getUserRoute: HttpRoutes[F] = GetUserRoute[F]().routes(userMiddleware)
 
   private val composeRoutes: HttpRoutes[F] = demoRoute <+> registerRoute <+> loginRoute <+> getUserRoute
 
