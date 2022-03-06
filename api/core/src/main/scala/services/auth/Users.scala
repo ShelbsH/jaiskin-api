@@ -19,6 +19,7 @@ trait Users[F[_]] {
   def createUser(reg: Register, password: EncryptedPassword): F[User]
   def getUserByEmail(email: Email): F[Option[UserWithPassword]]
   def getUserByUsername(username: Username): F[Option[User]]
+  def getUserById(userId: UserId): F[User]
 }
 
 trait UserAuth[F[_], A] {
@@ -92,6 +93,13 @@ object Users {
           .flatMap(_.prepare(selectUserByUsername))
           .use { q =>
             q.option(username)
+          }
+
+      def getUserById(userId: UserId): F[User] =
+        psql
+          .flatMap(_.prepare(selectUserById))
+          .use { q =>
+            q.unique(userId)
           }
     }
 }

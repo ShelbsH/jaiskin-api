@@ -13,6 +13,7 @@ import extension.ValidationFields._
 trait Auth[F[_]] {
   def login(email: Email, password: Password): F[JwtToken]
   def register(reg: RegisterCredentials): F[JwtToken]
+  def token(userId: UserId): F[JwtToken]
 }
 
 object Auth {
@@ -53,6 +54,11 @@ object Auth {
               u <- users.createUser(r, p)
               t <- tokens.make(u.id)
             } yield t
+        }
+
+      def token(userId: UserId): F[JwtToken] =
+        users.getUserById(userId).flatMap { user =>
+          tokens.make(user.id)
         }
     }
 }

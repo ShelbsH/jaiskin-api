@@ -8,15 +8,14 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.middleware.CORS
 import org.http4s.server.middleware.{ RequestLogger, ResponseLogger }
+import dev.profunktor.auth.JwtAuthMiddleware
 
+import routes.auth._
 import routes.version
 import routes.DemoRoute
-import routes.auth.GetUserRoute
-import routes.auth.{ RegisterRoute, LoginRoute }
 import services.Services
-import domains.user.User
 import security.Security
-import dev.profunktor.auth.JwtAuthMiddleware
+import domains.user.User
 
 object HttpAPI {
   def create[F[_]: Async](services: Services[F], security: Security[F]): HttpAPI[F] =
@@ -32,9 +31,11 @@ sealed abstract class HttpAPI[F[_]: Async] private (val services: Services[F], s
   private val loginRoute: HttpRoutes[F]    = LoginRoute[F](security.auth).route
 
   //AuthRoutes
-  private val getUserRoute: HttpRoutes[F] = GetUserRoute[F]().routes(userMiddleware)
+  private val getUserRoute: HttpRoutes[F]     = GetUserRoute[F]().routes(userMiddleware)
+  private val getJwtTokenRoute: HttpRoutes[F] = GetJwtTokenRoute[F](security.auth).routes(userMiddleware)
 
-  private val composeRoutes: HttpRoutes[F] = demoRoute <+> registerRoute <+> loginRoute <+> getUserRoute
+  private val composeRoutes: HttpRoutes[F] =
+    demoRoute <+> registerRoute <+> loginRoute <+> getUserRoute <+> getJwtTokenRoute
 
   private val middleware: HttpRoutes[F] => HttpRoutes[F] =
     http => CORS(http)
